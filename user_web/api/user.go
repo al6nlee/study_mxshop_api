@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 	"net/http"
 	"strconv"
+	"study_mxshop_api/user_web/global"
 	reponse "study_mxshop_api/user_web/global/response"
 	"study_mxshop_api/user_web/proto"
 	"time"
@@ -47,8 +48,8 @@ func HandleGrpcErrorToHttp(err error, c *gin.Context) {
 
 func GetUserList(ctx *gin.Context) {
 	// 拨号连接srv
-	ip := "127.0.0.1"
-	port := 50051
+	ip := global.ServerConfig.UserSrv.Host
+	port := global.ServerConfig.UserSrv.Port
 	userConn, err := grpc.Dial(ip+":"+strconv.Itoa(port), grpc.WithInsecure())
 	if err != nil {
 		zap.S().Errorw("连接srv失败", "err", err)

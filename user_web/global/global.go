@@ -1,5 +1,7 @@
 package global
 
+import "study_mxshop_api/user_web/config"
+
 var (
-	PORT int = 8888
+	ServerConfig *config.ServerConfig = &config.ServerConfig{}
 )

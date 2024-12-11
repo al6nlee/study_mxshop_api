@@ -14,12 +14,15 @@ func main() {
 	// 1. 初始化logger
 	initialize.InitLogger()
 
-	// 2. 初始化routers
+	// 2.初始化配置文件
+	initialize.InitConfig()
+
+	// 3. 初始化routers
 	Router := initialize.Routers()
 
-	zap.S().Debugf("启动服务器, 端口： %d", global.PORT)
+	zap.S().Debugf("启动服务器, 端口： %d", global.ServerConfig.PORT)
 	go func() {
-		if err := Router.Run(fmt.Sprintf(":%d", global.PORT)); err != nil {
+		if err := Router.Run(fmt.Sprintf(":%d", global.ServerConfig.PORT)); err != nil {
 			zap.S().Panic("启动失败:", err.Error())
 		}
 	}()
