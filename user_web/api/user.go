@@ -3,12 +3,15 @@ package api
 import (
 	"context"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"net/http"
 	"strconv"
+	"strings"
+	"study_mxshop_api/user_web/forms"
 	"study_mxshop_api/user_web/global"
 	reponse "study_mxshop_api/user_web/global/response"
 	"study_mxshop_api/user_web/proto"
@@ -47,6 +50,12 @@ func HandleGrpcErrorToHttp(err error, c *gin.Context) {
 }
 
 func GetUserList(ctx *gin.Context) {
+	// 获取Query传的参数
+	pn := ctx.DefaultQuery("pn", "1")
+	pnInt, _ := strconv.Atoi(pn)
+	pSize := ctx.DefaultQuery("psize", "10")
+	pSizeInt, _ := strconv.Atoi(pSize)
+
 	// 拨号连接srv
 	ip := global.ServerConfig.UserSrv.Host
 	port := global.ServerConfig.UserSrv.Port
@@ -58,13 +67,6 @@ func GetUserList(ctx *gin.Context) {
 		})
 		return
 	}
-
-	// 获取Query传的参数
-	pn := ctx.DefaultQuery("pn", "1")
-	pnInt, _ := strconv.Atoi(pn)
-	pSize := ctx.DefaultQuery("psize", "10")
-	pSizeInt, _ := strconv.Atoi(pSize)
-
 	// 生成grpc的client调用接口
 	userSrvClient := proto.NewUserClient(userConn)
 	rsp, err := userSrvClient.GetUserList(context.Background(), &proto.PageInfo{
@@ -94,4 +96,89 @@ func GetUserList(ctx *gin.Context) {
 	}
 	reMap["data"] = result
 	ctx.JSON(http.StatusOK, reMap)
+}
+
+func removeTopStruct(fileds map[string]string) map[string]string {
+	rsp := map[string]string{}
+	for field, err := range fileds {
+		rsp[field[strings.Index(field, ".")+1:]] = err
+	}
+	return rsp
+}
+
+func HandleValidatorError(c *gin.Context, err error) {
+	errs, ok := err.(validator.ValidationErrors)
+	if !ok {
+		c.JSON(http.StatusOK, gin.H{
+			"msg": err.Error(),
+		})
+	}
+	c.JSON(http.StatusBadRequest, gin.H{
+		"error": removeTopStruct(errs.Translate(global.Trans)),
+	})
+	return
+}
+
+func PassWordLogin(ctx *gin.Context) {
+	// 表单验证
+	passwordLoginForm := forms.PassWordLoginForm{}
+	if err := ctx.ShouldBind(&passwordLoginForm); err != nil { // ShouldBind自动判断请求是form还是json并做绑定
+		HandleValidatorError(ctx, err)
+		return
+	}
+
+	// 登录的逻辑
+	// 拨号连接srv
+	ip := global.ServerConfig.UserSrv.Host
+	port := global.ServerConfig.UserSrv.Port
+	userConn, err := grpc.Dial(ip+":"+strconv.Itoa(port), grpc.WithInsecure())
+	if err != nil {
+		zap.S().Errorw("连接srv失败", "err", err)
+		ctx.JSON(200, gin.H{
+			"msg": "连接srv失败",
+		})
+		return
+	}
+	// 生成grpc的client调用接口
+	userSrvClient := proto.NewUserClient(userConn)
+	rsp, err := userSrvClient.GetUserByMobile(context.Background(), &proto.MobileRequest{
+		Mobile: passwordLoginForm.Mobile,
+	})
+	if err != nil {
+		if e, ok := status.FromError(err); ok {
+			switch e.Code() {
+			case codes.NotFound:
+				ctx.JSON(http.StatusOK, gin.H{
+					"msg": "用户不存在",
+				})
+				return
+			default:
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"msg": "内部错误",
+				})
+				return
+			}
+		}
+	}
+	// 只是查询到用户了而已，并没有检查密码
+	passRsp, pasErr := userSrvClient.CheckPassWord(context.Background(), &proto.PasswordCheckInfo{
+		Password:          passwordLoginForm.PassWord,
+		EncryptedPassword: rsp.PassWord,
+	})
+	if pasErr != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"msg": "登录失败",
+		})
+		return
+	}
+	if passRsp.Success {
+		// 登录成功
+		ctx.JSON(http.StatusOK, gin.H{
+			"msg": "登录成功",
+		})
+	} else {
+		ctx.JSON(http.StatusOK, gin.H{
+			"msg": "密码错误",
+		})
+	}
 }
