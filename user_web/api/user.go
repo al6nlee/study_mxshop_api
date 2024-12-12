@@ -135,6 +135,14 @@ func PassWordLogin(ctx *gin.Context) {
 		return
 	}
 
+	// 效验账户密码前，先对验证码做验证
+	if store.Verify(passwordLoginForm.CaptchaId, passwordLoginForm.Captcha, false) == false {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"msg": "验证码错误",
+		})
+		return
+	}
+
 	// 登录的逻辑
 	// 拨号连接srv
 	ip := global.ServerConfig.UserSrv.Host
