@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"go.uber.org/zap"
@@ -14,6 +15,8 @@ import (
 	"study_mxshop_api/user_web/forms"
 	"study_mxshop_api/user_web/global"
 	reponse "study_mxshop_api/user_web/global/response"
+	"study_mxshop_api/user_web/middlewares"
+	"study_mxshop_api/user_web/models"
 	"study_mxshop_api/user_web/proto"
 	"time"
 )
@@ -173,8 +176,29 @@ func PassWordLogin(ctx *gin.Context) {
 	}
 	if passRsp.Success {
 		// 登录成功
+		j := middlewares.NewJWT()
+		claims := models.CustomClaims{
+			ID:          uint(rsp.Id),
+			NickName:    rsp.NickName,
+			AuthorityId: uint(rsp.Role),
+			StandardClaims: jwt.StandardClaims{
+				NotBefore: time.Now().Unix(),               // 签名的生效时间
+				ExpiresAt: time.Now().Unix() + 60*60*24*30, // 30天过期
+				Issuer:    "SAAS",                          // 签发机构
+			},
+		}
+		token, err := j.CreateToken(claims)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"msg": "生成token失败",
+			})
+			return
+		}
 		ctx.JSON(http.StatusOK, gin.H{
-			"msg": "登录成功",
+			"id":         rsp.Id,
+			"nick_name":  rsp.NickName,
+			"token":      token,
+			"expired_at": (time.Now().Unix() + 60*60*24*30) * 1000,
 		})
 	} else {
 		ctx.JSON(http.StatusOK, gin.H{
