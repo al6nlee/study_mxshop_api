@@ -40,6 +40,9 @@ func main() {
 		})
 	}
 
+	// 6. 初始化srv的连接
+	initialize.InitSrvConn()
+
 	zap.S().Debugf("启动服务器, 端口： %d", global.ServerConfig.PORT)
 	go func() {
 		if err := Router.Run(fmt.Sprintf(":%d", global.ServerConfig.PORT)); err != nil {

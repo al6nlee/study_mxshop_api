@@ -8,7 +8,6 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"net/http"
@@ -67,19 +66,7 @@ func GetUserList(ctx *gin.Context) {
 	pSizeInt, _ := strconv.Atoi(pSize)
 
 	// 拨号连接srv
-	ip := global.ServerConfig.UserSrv.Host
-	port := global.ServerConfig.UserSrv.Port
-	userConn, err := grpc.Dial(ip+":"+strconv.Itoa(port), grpc.WithInsecure())
-	if err != nil {
-		zap.S().Errorw("连接srv失败", "err", err)
-		ctx.JSON(200, gin.H{
-			"msg": "连接srv失败",
-		})
-		return
-	}
-	// 生成grpc的client调用接口
-	userSrvClient := proto.NewUserClient(userConn)
-	rsp, err := userSrvClient.GetUserList(context.Background(), &proto.PageInfo{
+	rsp, err := global.UserSrvClient.GetUserList(context.Background(), &proto.PageInfo{
 		Pn:    uint32(pnInt),
 		PSize: uint32(pSizeInt),
 	})
@@ -146,20 +133,7 @@ func PassWordLogin(ctx *gin.Context) {
 	}
 
 	// 登录的逻辑
-	// 拨号连接srv
-	ip := global.ServerConfig.UserSrv.Host
-	port := global.ServerConfig.UserSrv.Port
-	userConn, err := grpc.Dial(ip+":"+strconv.Itoa(port), grpc.WithInsecure())
-	if err != nil {
-		zap.S().Errorw("连接srv失败", "err", err)
-		ctx.JSON(200, gin.H{
-			"msg": "连接srv失败",
-		})
-		return
-	}
-	// 生成grpc的client调用接口
-	userSrvClient := proto.NewUserClient(userConn)
-	rsp, err := userSrvClient.GetUserByMobile(context.Background(), &proto.MobileRequest{
+	rsp, err := global.UserSrvClient.GetUserByMobile(context.Background(), &proto.MobileRequest{
 		Mobile: passwordLoginForm.Mobile,
 	})
 	if err != nil {
@@ -179,7 +153,7 @@ func PassWordLogin(ctx *gin.Context) {
 		}
 	}
 	// 只是查询到用户了而已，并没有检查密码
-	passRsp, pasErr := userSrvClient.CheckPassWord(context.Background(), &proto.PasswordCheckInfo{
+	passRsp, pasErr := global.UserSrvClient.CheckPassWord(context.Background(), &proto.PasswordCheckInfo{
 		Password:          passwordLoginForm.PassWord,
 		EncryptedPassword: rsp.PassWord,
 	})
@@ -252,19 +226,7 @@ func Register(c *gin.Context) {
 	}
 
 	// 通过grpc去srv侧进行用户注册
-	ip := global.ServerConfig.UserSrv.Host
-	port := global.ServerConfig.UserSrv.Port
-	userConn, err := grpc.Dial(ip+":"+strconv.Itoa(port), grpc.WithInsecure())
-	if err != nil {
-		zap.S().Errorw("连接srv失败", "err", err)
-		c.JSON(200, gin.H{
-			"msg": "连接srv失败",
-		})
-		return
-	}
-	// 生成grpc的client调用接口
-	userSrvClient := proto.NewUserClient(userConn)
-	user, err := userSrvClient.CreateUser(context.Background(), &proto.CreateUserInfo{
+	user, err := global.UserSrvClient.CreateUser(context.Background(), &proto.CreateUserInfo{
 		NickName: registerForm.Mobile,
 		PassWord: registerForm.PassWord,
 		Mobile:   registerForm.Mobile,
