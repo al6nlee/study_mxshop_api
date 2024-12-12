@@ -2,9 +2,11 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -218,4 +220,86 @@ func PassWordLogin(ctx *gin.Context) {
 			"msg": "密码错误",
 		})
 	}
+}
+
+func Register(c *gin.Context) {
+	// 用户注册
+	registerForm := forms.RegisterForm{}
+	if err := c.ShouldBind(&registerForm); err != nil {
+		HandleValidatorError(c, err)
+		return
+	}
+
+	// 去redis中获取注册手机号的验证码
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:%d", global.ServerConfig.RedisInfo.Host, global.ServerConfig.RedisInfo.Port),
+		Password: global.ServerConfig.RedisInfo.Password,
+	})
+
+	value, err := rdb.Get(context.Background(), registerForm.Mobile).Result()
+	if err == redis.Nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code": "验证码已失效，请重新发送",
+		})
+		return
+	} else {
+		if value != registerForm.Code {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"code": "验证码错误",
+			})
+			return
+		}
+	}
+
+	// 通过grpc去srv侧进行用户注册
+	ip := global.ServerConfig.UserSrv.Host
+	port := global.ServerConfig.UserSrv.Port
+	userConn, err := grpc.Dial(ip+":"+strconv.Itoa(port), grpc.WithInsecure())
+	if err != nil {
+		zap.S().Errorw("连接srv失败", "err", err)
+		c.JSON(200, gin.H{
+			"msg": "连接srv失败",
+		})
+		return
+	}
+	// 生成grpc的client调用接口
+	userSrvClient := proto.NewUserClient(userConn)
+	user, err := userSrvClient.CreateUser(context.Background(), &proto.CreateUserInfo{
+		NickName: registerForm.Mobile,
+		PassWord: registerForm.PassWord,
+		Mobile:   registerForm.Mobile,
+	})
+
+	if err != nil {
+		zap.S().Errorf("[Register] 查询 【新建用户失败】失败: %s", err.Error())
+		HandleGrpcErrorToHttp(err, c)
+		return
+	}
+
+	// 注册成功后给前端返回token，实现自动登录
+	j := middlewares.NewJWT()
+	claims := models.CustomClaims{
+		ID:          uint(user.Id),
+		NickName:    user.NickName,
+		AuthorityId: uint(user.Role),
+		StandardClaims: jwt.StandardClaims{
+			NotBefore: time.Now().Unix(),               // 签名的生效时间
+			ExpiresAt: time.Now().Unix() + 60*60*24*30, // 30天过期
+			Issuer:    "SAAS",
+		},
+	}
+	token, err := j.CreateToken(claims)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"msg": "生成token失败",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"id":         user.Id,
+		"nick_name":  user.NickName,
+		"token":      token,
+		"expired_at": (time.Now().Unix() + 60*60*24*30) * 1000,
+	})
 }
