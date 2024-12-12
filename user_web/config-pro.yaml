@@ -5,3 +5,8 @@ user_srv:
   port: 50051
 jwt:
   key: "sadava12whbcb128^^*%%sjacvwhassc"
+redis:
+  host: 172.26.25.139
+  port: 30079
+  password: admin123
+  expire: 300

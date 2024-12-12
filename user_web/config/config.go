@@ -9,9 +9,23 @@ type JWTConfig struct {
 	SigningKey string `mapstructure:"key" json:"key"`
 }
 
+type RedisConfig struct {
+	Host     string `mapstructure:"host" json:"host"`
+	Port     int    `mapstructure:"port" json:"port"`
+	Password string `mapstructure:"password" json:"password"`
+	Expire   int    `mapstructure:"expire" json:"expire"`
+}
+
+type AliSmsConfig struct {
+	ApiKey     string `mapstructure:"key" json:"key"`
+	ApiSecrect string `mapstructure:"secrect" json:"secrect"`
+}
+
 type ServerConfig struct {
-	UserSrv UserSrvConfig `mapstructure:"user_srv" json:"user_srv"`
-	Name    string        `mapstructure:"name" json:"name"`
-	PORT    int           `mapstructure:"port" json:"port"`
-	JWTInfo JWTConfig     `mapstructure:"jwt" json:"jwt"`
+	UserSrv    UserSrvConfig `mapstructure:"user_srv" json:"user_srv"`
+	Name       string        `mapstructure:"name" json:"name"`
+	PORT       int           `mapstructure:"port" json:"port"`
+	JWTInfo    JWTConfig     `mapstructure:"jwt" json:"jwt"`
+	AliSmsInfo AliSmsConfig  `mapstructure:"sms" json:"sms"`
+	RedisInfo  RedisConfig   `mapstructure:"redis" json:"redis"`
 }
