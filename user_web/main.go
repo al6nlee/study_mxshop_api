@@ -5,12 +5,14 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
+	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
 	"os"
 	"os/signal"
 	"study_mxshop_api/user_web/global"
 	"study_mxshop_api/user_web/initialize"
 	"study_mxshop_api/user_web/utils"
+	"study_mxshop_api/user_web/utils/register/consul"
 	validator2 "study_mxshop_api/user_web/validator"
 	"syscall"
 )
@@ -58,9 +60,20 @@ func main() {
 			zap.S().Panic("启动失败:", err.Error())
 		}
 	}()
-
+	// 服务注册
+	register_client := consul.NewRegistryClient(global.ServerConfig.ConsulInfo.Host, global.ServerConfig.ConsulInfo.Port)
+	serviceId := fmt.Sprintf("%s", uuid.NewV4())
+	err := register_client.Register(global.ServerConfig.Host, global.ServerConfig.PORT, global.ServerConfig.Name, global.ServerConfig.Tags, serviceId)
+	if err != nil {
+		zap.S().Panic("服务注册失败:", err.Error())
+	}
 	// 接收终止信号
 	quit := make(chan os.Signal)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
+	if err = register_client.DeRegister(serviceId); err != nil {
+		zap.S().Info("注销失败:", err.Error())
+	} else {
+		zap.S().Info("注销成功:")
+	}
 }

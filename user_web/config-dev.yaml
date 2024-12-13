@@ -1,5 +1,9 @@
 name: user_web
+host: 100.200.27.114
 port: 8888
+tags:
+  - user_web
+  - alan
 user_srv:
   name: user_srv
 jwt:
