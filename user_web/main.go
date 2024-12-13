@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"study_mxshop_api/user_web/global"
 	"study_mxshop_api/user_web/initialize"
+	"study_mxshop_api/user_web/utils"
 	validator2 "study_mxshop_api/user_web/validator"
 	"syscall"
 )
@@ -42,6 +43,14 @@ func main() {
 
 	// 6. 初始化srv的连接
 	initialize.InitSrvConn()
+
+	debug := initialize.GetEnvInfo("MXSHOP_DEBUG")
+	if debug {
+		port, err := utils.GetFreePort()
+		if err == nil {
+			global.ServerConfig.PORT = port
+		}
+	}
 
 	zap.S().Debugf("启动服务器, 端口： %d", global.ServerConfig.PORT)
 	go func() {

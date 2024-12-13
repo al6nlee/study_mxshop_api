@@ -1,7 +1,14 @@
 name: user_web
 port: 8888
 user_srv:
-  host: 127.0.0.1
-  port: 50051
+  name: user_srv
 jwt:
   key: "sadava12whbcb128^^*%%sjacvwhassc"
+redis:
+  host: 172.26.25.139
+  port: 30079
+  password: admin123
+  expire: 300
+consul:
+  host: "172.26.25.139"
+  port: 30500
