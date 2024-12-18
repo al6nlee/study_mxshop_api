@@ -10,4 +10,5 @@ var (
 	Trans         ut.Translator
 	ServerConfig  *config.ServerConfig = &config.ServerConfig{}
 	UserSrvClient proto.UserClient
+	NacosConfig   config.NacosConfig
 )
