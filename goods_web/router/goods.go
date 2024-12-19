@@ -9,6 +9,6 @@ func InitGoodsRouter(Router *gin.RouterGroup) {
 	GoodsRouter := Router.Group("goods")
 	// UserRouter := Router.Group("user").Use(middlewares.JWTAuth())
 	{
-		GoodsRouter.GET("list", goods.GetGoodsList)
+		GoodsRouter.GET("list", goods.List)
 	}
 }
