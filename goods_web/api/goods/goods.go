@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 	"study_mxshop_api/goods_web/api"
+	"study_mxshop_api/goods_web/forms"
 	"study_mxshop_api/goods_web/global"
 	"study_mxshop_api/goods_web/proto"
 )
@@ -98,4 +99,35 @@ func List(ctx *gin.Context) {
 	reMap["data"] = goodsList
 
 	ctx.JSON(http.StatusOK, reMap)
+}
+
+func New(ctx *gin.Context) {
+	goodsForm := forms.GoodsForm{}
+	if err := ctx.ShouldBindJSON(&goodsForm); err != nil {
+		api.HandleValidatorError(ctx, err)
+		return
+	}
+	goodsClient := global.GoodsSrvClient
+	rsp, err := goodsClient.CreateGoods(context.Background(), &proto.CreateGoodsInfo{
+		Name:            goodsForm.Name,
+		GoodsSn:         goodsForm.GoodsSn,
+		Stocks:          goodsForm.Stocks,
+		MarketPrice:     goodsForm.MarketPrice,
+		ShopPrice:       goodsForm.ShopPrice,
+		GoodsBrief:      goodsForm.GoodsBrief,
+		ShipFree:        *goodsForm.ShipFree, // 对于bool类型的数据，这里传的是指针，取值需要加*
+		Images:          goodsForm.Images,
+		DescImages:      goodsForm.DescImages,
+		GoodsFrontImage: goodsForm.FrontImage,
+		CategoryId:      goodsForm.CategoryId, // 这里传的是商品的三级分类，叶子节点
+		BrandId:         goodsForm.Brand,
+	})
+	if err != nil {
+		api.HandleGrpcErrorToHttp(err, ctx)
+		return
+	}
+
+	// 如何设置库存
+	// TODO 商品的库存 - 分布式事务
+	ctx.JSON(http.StatusOK, rsp)
 }
