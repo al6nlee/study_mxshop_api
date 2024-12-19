@@ -1,0 +1,13 @@
+name: goods_web
+host: 10.8.117.74
+port: 8889
+tags:
+  - goods_web
+  - alan
+goods_srv:
+  name: goods_srv
+jwt:
+  key: "sadava12whbcb128^^*%%sjacvwhassc"
+consul:
+  host: "172.26.25.139"
+  port: 30500
