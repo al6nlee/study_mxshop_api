@@ -1,0 +1,18 @@
+name: oss_web
+host: 10.8.117.74
+port: 8890
+tags:
+  - oss_web
+  - alan
+jwt:
+  key: "sadava12whbcb128^^*%%sjacvwhassc"
+consul:
+  host: "172.26.25.139"
+  port: 30500
+oss:
+  key: laOaPuoMCOkUUE4eTHky
+  secrect: W93aHwb1pZAlMmpD8lI0AzEmi3SBiHkHhsV8hlez
+  host: 172.26.25.139
+  port: 30081
+  bucket_name: oss-bucket
+  upload_dir: dev

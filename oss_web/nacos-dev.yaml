@@ -1,0 +1,5 @@
+host: '172.26.25.139'
+port: 30048
+namespace: '2626f48f-3601-456f-82e3-5ad9c1ee72fe'
+dataid: 'dev'
+group: 'web'
