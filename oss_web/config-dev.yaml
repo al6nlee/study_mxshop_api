@@ -15,4 +15,4 @@ oss:
   host: 172.26.25.139
   port: 30081
   bucket_name: oss-bucket
-  upload_dir: dev
+  prefix: dev

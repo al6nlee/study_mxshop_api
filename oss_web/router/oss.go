@@ -8,7 +8,7 @@ import (
 func InitOssRouter(Router *gin.RouterGroup) {
 	OssRouter := Router.Group("oss")
 	{
-		OssRouter.GET("token", api.Token)
+		OssRouter.GET("/presigned", api.PresignedPut)
 		OssRouter.POST("/callback", api.HandlerRequest)
 	}
 }

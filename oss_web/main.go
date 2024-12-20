@@ -20,10 +20,13 @@ func main() {
 	// 2.初始化配置文件
 	initialize.InitConfig()
 
-	// 3. 初始化routers
+	// 3.初始化minio
+	initialize.InitMinio()
+
+	// 4. 初始化routers
 	Router := initialize.Routers()
 
-	// 4. 初始化翻译
+	// 5. 初始化翻译
 	if err := initialize.InitTrans("zh"); err != nil {
 		panic(err)
 	}

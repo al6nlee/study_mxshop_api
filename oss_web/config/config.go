@@ -3,9 +3,11 @@ package config
 type OssConfig struct {
 	ApiKey      string `mapstructure:"key" json:"key" yaml:"key"`
 	ApiSecrect  string `mapstructure:"secrect" json:"secrect" yaml:"secrect"`
+	BucketName  string `mapstructure:"bucket_name" json:"bucket_name" yaml:"bucket_name"`
 	Host        string `mapstructure:"host" json:"host" yaml:"host"`
+	PORT        int    `mapstructure:"port" json:"port" yaml:"port"`
 	CallBackUrl string `mapstructure:"callback_url" json:"callback_url" yaml:"callback_url"`
-	UploadDir   string `mapstructure:"upload_dir" json:"upload_dir" yaml:"upload_dir"`
+	Prefix      string `mapstructure:"prefix" json:"prefix" yaml:"prefix"`
 }
 
 type JWTConfig struct {
