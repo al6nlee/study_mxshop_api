@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin/binding"
+	ut "github.com/go-playground/universal-translator"
+	"github.com/go-playground/validator/v10"
 	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
 	"os"
@@ -10,6 +13,7 @@ import (
 	"study_mxshop_api/order_web/initialize"
 	"study_mxshop_api/order_web/utils"
 	"study_mxshop_api/order_web/utils/register/consul"
+	validator2 "study_mxshop_api/order_web/validator"
 	"syscall"
 )
 
@@ -28,7 +32,18 @@ func main() {
 		panic(err)
 	}
 
-	// 5. 初始化srv的连接
+	// 5. 注册验证器
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		_ = v.RegisterValidation("mobile", validator2.ValidateMobile)
+		_ = v.RegisterTranslation("mobile", global.Trans, func(ut ut.Translator) error {
+			return ut.Add("mobile", "{0} 非法的手机号码!", true) // see universal-translator for details
+		}, func(ut ut.Translator, fe validator.FieldError) string {
+			t, _ := ut.T("mobile", fe.Field())
+			return t
+		})
+	}
+
+	// 6. 初始化srv的连接
 	initialize.InitSrvConn()
 
 	debug := initialize.GetEnvInfo("MXSHOP_DEBUG")
