@@ -20,5 +20,6 @@ func Routers() *gin.Engine {
 
 	ApiGroup := Router.Group("/o/v1")
 	router.InitOrderRouter(ApiGroup)
+	router.InitShopCartRouter(ApiGroup)
 	return Router
 }
