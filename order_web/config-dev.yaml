@@ -15,3 +15,9 @@ jwt:
 consul:
   host: "172.26.25.139"
   port: 30500
+alipay:
+  app_id: "9011000113690291"
+  private_key: "MIIEpAIBAAKCAQEAy7yj+hYKh4KgZ4h4h4h4xxxxxxxxxxxxxxxxxxxxxx"                           # privateKey - 应用私钥，开发者自己生成
+  ali_public_key: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAy7yj+hYKh4KgZ4h4h4h4yyyyyyyyyyyy"      # ali_public_key 支付宝公钥
+  notify_url: "http://10.8.117.74:8892/o/v1/pay/alipay/notify"
+  return_url: "http://10.8.117.74:8892/o/v1/pay/alipay/return"
