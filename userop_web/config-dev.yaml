@@ -1,0 +1,18 @@
+name: userop_web
+host: 100.200.27.114
+port: 8888
+tags:
+  - userop_web
+  - alan
+user_srv:
+  name: user_srv
+jwt:
+  key: "sadava12whbcb128^^*%%sjacvwhassc"
+redis:
+  host: 172.26.25.139
+  port: 30079
+  password: admin123
+  expire: 300
+consul:
+  host: "172.26.25.139"
+  port: 30500
